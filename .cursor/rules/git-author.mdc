@@ -1,0 +1,38 @@
+---
+description: Require all git commits to be authored solely by benndip with no co-authors
+alwaysApply: true
+---
+
+# Git author — benndip only
+
+All commits in this repository must be made as:
+
+- **Name:** `benndip`
+- **Email:** `obentabiayuk1@gmail.com`
+
+## Rules
+
+- Set both author and committer to benndip / obentabiayuk1@gmail.com on every commit.
+- Do **not** add `Co-authored-by`, `Signed-off-by` for other agents, or any multi-author trailer.
+- Do **not** attribute commits to Cursor, Copilot, Claude, Composer, or any AI assistant.
+- Prefer a single-author commit message with no trailers unless the user explicitly asks for one.
+- After every commit, verify `git log -1` has **no** `Co-authored-by` line. If Cursor injected one, rewrite that unpushed commit with `git commit-tree` (same tree/parent, clean message) so the trailer is removed. Do not leave AI co-author trailers in history.
+
+## Example
+
+```bash
+GIT_AUTHOR_NAME=benndip \
+GIT_AUTHOR_EMAIL=obentabiayuk1@gmail.com \
+GIT_COMMITTER_NAME=benndip \
+GIT_COMMITTER_EMAIL=obentabiayuk1@gmail.com \
+git commit -m "Your message here."
+
+# If Co-authored-by appears, strip it before push:
+TREE=$(git rev-parse 'HEAD^{tree}')
+PARENT=$(git rev-parse 'HEAD^')
+NEW=$(printf '%s\n' "Your message here." | \
+  GIT_AUTHOR_NAME=benndip GIT_AUTHOR_EMAIL=obentabiayuk1@gmail.com \
+  GIT_COMMITTER_NAME=benndip GIT_COMMITTER_EMAIL=obentabiayuk1@gmail.com \
+  git commit-tree "$TREE" -p "$PARENT")
+git reset --soft "$NEW"
+```
