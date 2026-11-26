@@ -43,17 +43,19 @@ npx supabase stop
 ```
 auth.users 1──1 profiles
                 ├── 1──1 kyc
-                ├── 1──* repairs
-                ├── 1──* repairer_calls          (client)
-                ├── 1──* repairer_calls          (repairer, via repairer_id)
+                ├── 1──* repairs                 (book)
+                ├── 1──* repairer_calls          (talk to — client side)
+                ├── 1──* repairer_calls          (talk to — repairer_id)
                 ├── 1──* shops
-                ├── 1──* laptops_for_rent
+                ├── 1──* reviews
+                ├── 1──* laptops_for_rent        (rent out / ComputerOnRent)
                 ├── 1──* laptops_for_sale
-                ├── 1──* user_rented_laptops
+                ├── 1──* user_rented_laptops     (USER ↔ ComputerOnRent)
                 └── 1──* user_bought_laptops
 
 shops 1──* laptops_for_rent
-shops 1──* laptops_for_sale
+shops 1──* laptops_for_sale                    (have Computers / ComputerOnSale)
+shops 1──* reviews
 laptops_for_rent 1──* user_rented_laptops
 laptops_for_sale 1──* user_bought_laptops
 repairs 1──* repairer_calls
@@ -61,9 +63,9 @@ repairs 1──* repairer_calls
 
 ### Roles
 
-`client | repairer | admin | super-admin`
+`user | repairer | admin | super-admin`
 
-New signups always start as `client`. Only staff can change a role.
+New signups always start as `user`. Only staff can change a role.
 
 ### Storage buckets
 
@@ -81,25 +83,28 @@ Upload path: `{bucket}/{user_id}/{filename}`
 ## Decisions from the handwritten notes
 
 1. `fullname` + `last_name` → `first_name` + `last_name`
-2. Rental price → `weekly_rate` (default 5000 XAF / week)
+2. Rental price → `weekly_rate` (default 5000 XAF / week) = diagram "Amount per week"
 3. Duplicate `storage` on sale listings → `storage` (capacity) + `storage_type` (HDD / SSD / NVMe)
 4. `created_at` / `updated_at` on every table
 5. `condition` (`new` / `used`) on both laptop tables
 6. `shipping` → `shipping_available` + `shipping_cost`
-7. Optional `shop_id` on both laptop listing tables
+7. Optional `shop_id` on both laptop listing tables (sale listings are shop-owned in the ERD)
+8. Role `client` renamed to `user` to match the diagrams
+9. Added `reviews` (user + shop + stars + notes)
+10. Shop contact/location: `town`, `quarter`, `phone`, `email`, `shop_image_url`
+11. Rent listings: `name`, `any_known_issues`, `comes_with_charger`, `description`
+12. Sale listings: `name`, `processor_speed`, `graphics_card`
+13. Rental bookings: `amount` on `user_rented_laptops`
 
-## Sync with a remote project later
+## Remote project
 
-1. Create the hosted project in the Supabase dashboard.
-2. From this folder:
+Linked project: **RepairRemotely** (`baerfogfstmxwohgbzrb`)
 
 ```bash
-npx supabase login
-npx supabase link --project-ref <project-ref>
-npx supabase db push
+npx supabase db push --remote --yes
 ```
 
-`db push` applies the local migrations to the remote database. Do not run `db pull` first if the remote project is empty — that would overwrite this schema with a blank remote snapshot.
+Do not run `db pull` against an empty or divergent remote unless you intend to import remote-only changes into this repo.
 
 ## Frontend env
 
